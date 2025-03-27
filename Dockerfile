@@ -4,7 +4,7 @@ FROM registry.access.redhat.com/ubi9/ubi
 USER 0
 WORKDIR /home/devuser
 
-# Install required tools
+# Install tools
 RUN sed -i 's/enabled=0/enabled=1/' /etc/yum.repos.d/ubi.repo || true && \
     dnf install -y \
     git \
@@ -19,19 +19,21 @@ RUN sed -i 's/enabled=0/enabled=1/' /etc/yum.repos.d/ubi.repo || true && \
     shadow-utils \
     && dnf clean all
 
-# Create non-root user
-RUN useradd -ms /bin/bash devuser
+# Create user and ensure /home/devuser exists
+RUN useradd -ms /bin/bash devuser && \
+    mkdir -p /home/devuser/.config && \
+    chown -R devuser:devuser /home/devuser
 
-# Create ~/.config and fix ownership BEFORE switching to devuser
-RUN mkdir -p /home/devuser/.config && chown -R devuser:devuser /home/devuser
-
-# Download ttyd
+# Download ttyd (web terminal)
 RUN wget -O /usr/local/bin/ttyd https://github.com/tsl0922/ttyd/releases/download/1.7.3/ttyd.x86_64 && \
     chmod +x /usr/local/bin/ttyd
 
-# Now switch to non-root user
+# Switch to non-root user
 USER devuser
 WORKDIR /home/devuser
+
+# ✅ Ensure .config exists at runtime too
+RUN mkdir -p /home/devuser/.config
 
 EXPOSE 7681
 
