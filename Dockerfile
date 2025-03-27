@@ -1,28 +1,27 @@
-# Use full UBI 9 base (not minimal)
 FROM registry.access.redhat.com/ubi9/ubi
 
-# Switch to root to install packages
 USER 0
+WORKDIR /home/devuser
 
-# Install CLI tools + dependencies
-RUN dnf install -y \
-    bash \
+# 🔧 Enable Repos for dev tools (especially for make, gcc, etc.)
+RUN sed -i 's/enabled=0/enabled=1/' /etc/yum.repos.d/ubi.repo || true && \
+    dnf install -y \
     git \
-    curl \
-    unzip \
+    bash \
     wget \
-    make \
+    unzip \
     gcc \
+    make \
     cmake \
     which \
     shadow-utils \
     && dnf clean all
 
-# Create non-root user (OpenShift compatible)
+# Create user for non-root runtime (OpenShift compatibility)
 RUN useradd -ms /bin/bash devuser
 
-# Install ttyd (precompiled binary)
-RUN curl -L -o /usr/local/bin/ttyd https://github.com/tsl0922/ttyd/releases/download/1.7.3/ttyd.x86_64 && \
+# Download and install ttyd (web terminal)
+RUN wget -O /usr/local/bin/ttyd https://github.com/tsl0922/ttyd/releases/download/1.7.3/ttyd.x86_64 && \
     chmod +x /usr/local/bin/ttyd
 
 USER devuser
@@ -30,5 +29,4 @@ WORKDIR /home/devuser
 
 EXPOSE 7681
 
-# Start web terminal with bash
 CMD ["ttyd", "-p", "7681", "bash"]
