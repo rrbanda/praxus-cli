@@ -1,8 +1,10 @@
+# Use full UBI 9 base (not minimal)
 FROM registry.access.redhat.com/ubi9/ubi
 
+# Switch to root to install packages
 USER 0
 
-# Install CLI tools + ttyd
+# Install CLI tools + dependencies
 RUN dnf install -y \
     bash \
     git \
@@ -12,15 +14,21 @@ RUN dnf install -y \
     make \
     gcc \
     cmake \
-    && dnf clean all && \
-    curl -LO https://github.com/tsl0922/ttyd/releases/download/1.7.3/ttyd.x86_64 && \
-    chmod +x ttyd.x86_64 && mv ttyd.x86_64 /usr/local/bin/ttyd
+    which \
+    shadow-utils \
+    && dnf clean all
 
-# Set up default user/workdir
+# Create non-root user (OpenShift compatible)
 RUN useradd -ms /bin/bash devuser
+
+# Install ttyd (precompiled binary)
+RUN curl -L -o /usr/local/bin/ttyd https://github.com/tsl0922/ttyd/releases/download/1.7.3/ttyd.x86_64 && \
+    chmod +x /usr/local/bin/ttyd
+
 USER devuser
 WORKDIR /home/devuser
 
-# Launch bash in web terminal on port 7681
 EXPOSE 7681
-CMD ["ttyd", "-p", "7681", "/bin/bash"]
+
+# Start web terminal with bash
+CMD ["ttyd", "-p", "7681", "bash"]
