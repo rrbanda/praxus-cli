@@ -1,18 +1,16 @@
-# Use UBI or Debian/Alpine as base depending on your toolchain needs
-FROM registry.access.redhat.com/ubi9/ubi-minimal
+FROM registry.access.redhat.com/ubi9/ubi
 
-# Install CLI tools needed for your terminal (e.g., curl, git, bash, zsh, kubectl)
-RUN microdnf install -y \
+USER 0
+
+RUN dnf install -y \
     bash \
     git \
     curl \
     unzip \
-    && microdnf clean all
+    && dnf clean all
 
-# Set up non-root user if needed (for security or OpenShift compatibility)
-RUN useradd -ms /bin/bash devuser
-USER devuser
-WORKDIR /home/devuser
+# Add additional tools here (kubectl, python3, node, etc)
 
-# Optional: Set shell and terminal startup
-CMD [ "bash" ]
+USER 1001
+WORKDIR /workspace
+CMD ["/bin/bash"]
