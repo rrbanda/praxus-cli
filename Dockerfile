@@ -12,6 +12,7 @@ RUN sed -i 's/enabled=0/enabled=1/' /etc/yum.repos.d/ubi.repo || true && \
     unzip \
     gcc \
     make \
+    podman \
     cmake \
     which \
     shadow-utils \
