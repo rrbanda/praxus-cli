@@ -1,40 +1,43 @@
+# Containerfile
+
+# ✅ Base image with package manager and system tools
 FROM registry.access.redhat.com/ubi9/ubi
 
-# Switch to root
+# Use root to install dependencies
 USER 0
-WORKDIR /home/devuser
 
-# Install tools
-RUN sed -i 's/enabled=0/enabled=1/' /etc/yum.repos.d/ubi.repo || true && \
-    dnf install -y \
-    git \
+# Create non-root user
+RUN useradd -m devuser
+
+# Install CLI tools including podman and dependencies
+RUN dnf install -y \
     bash \
+    git \
     wget \
     unzip \
-    gcc \
+    curl \
     make \
-    podman \
+    gcc \
     cmake \
-    which \
+    podman \
     shadow-utils \
+    which \
     && dnf clean all
 
-# Create user and ensure /home/devuser exists
-RUN useradd -ms /bin/bash devuser && \
-    mkdir -p /home/devuser/.config && \
+# ✅ Create config directory and fix ownership for podman to avoid .config crash
+RUN mkdir -p /home/devuser/.config && \
     chown -R devuser:devuser /home/devuser
 
-# Download ttyd (web terminal)
+# Download and install ttyd (web terminal server)
 RUN wget -O /usr/local/bin/ttyd https://github.com/tsl0922/ttyd/releases/download/1.7.3/ttyd.x86_64 && \
     chmod +x /usr/local/bin/ttyd
 
-# Switch to non-root user
+# Drop to the non-root user
 USER devuser
 WORKDIR /home/devuser
 
-# ✅ Ensure .config exists at runtime too
-RUN mkdir -p /home/devuser/.config
-
+# Expose port ttyd will use
 EXPOSE 7681
 
+# Run web terminal with bash
 CMD ["ttyd", "-p", "7681", "bash"]
