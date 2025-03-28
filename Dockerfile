@@ -7,7 +7,7 @@ WORKDIR /home/devuser
 RUN useradd -m devuser
 
 # Add essential tools one by one to identify issues
-RUN dnf install -y \
+RUN dnf install -y --allowerasing \
     bash \
     git \
     wget \
@@ -19,6 +19,7 @@ RUN dnf install -y \
     which \
     shadow-utils \
     && dnf clean all
+
 
 # Separate Podman install (known to require additional setup)
 RUN dnf install -y podman fuse-overlayfs slirp4netns container-selinux && dnf clean all
